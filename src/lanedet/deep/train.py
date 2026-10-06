@@ -23,6 +23,7 @@ from ..config import (
     MODELS_DIR,
     NUM_CLASSES,
     REPORTS_DIR,
+    ROOT,
     TUSIMPLE_DIR,
     TUSIMPLE_TRAIN_JSONS,
     TUSIMPLE_VAL_JSONS,
@@ -30,6 +31,16 @@ from ..config import (
 from ..tusimple import available_records
 from .dataset import TuSimpleDataset
 from .model import DeepLaneDetector, build_model, pick_device
+
+
+def _rel(value) -> str:
+    """Paths relative to the repo, so reports don't leak local directories."""
+    if isinstance(value, Path):
+        try:
+            return str(value.resolve().relative_to(ROOT))
+        except ValueError:
+            return value.name
+    return str(value)
 
 
 def set_seed(seed: int) -> None:
@@ -122,7 +133,7 @@ def main() -> None:
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     (REPORTS_DIR / "training_history.json").write_text(json.dumps(
-        {"args": {k: str(v) for k, v in vars(args).items()}, "device": str(device),
+        {"args": {k: _rel(v) for k, v in vars(args).items()}, "device": str(device),
          "train_images": len(train_recs), "val_images": len(val_recs),
          "minutes": (time.time() - start) / 60, "history": history}, indent=2))
     print(f"Best val ego accuracy {best:.3f}; saved {args.output}")
