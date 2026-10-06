@@ -15,9 +15,18 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 def draw_lanes(bgr: np.ndarray, result: LaneResult, fill: bool = True) -> np.ndarray:
     out = bgr.copy()
     if fill and "left" in result.lanes and "right" in result.lanes:
-        left = result.lanes["left"]
-        right = result.lanes["right"][::-1]
-        poly = np.vstack([left, right]).astype(np.int32)
+        # fill only over the rows both lanes cover, so lanes of different length
+        # don't produce a skewed polygon
+        lp, rp = result.lanes["left"], result.lanes["right"]
+        y0 = max(lp[:, 1].min(), rp[:, 1].min())
+        y1 = min(lp[:, 1].max(), rp[:, 1].max())
+        if y1 - y0 < 10:
+            fill = False
+    if fill and "left" in result.lanes and "right" in result.lanes:
+        ys = np.linspace(y0, y1, 50)
+        left = np.stack([np.interp(ys, *lp[np.argsort(lp[:, 1])][:, ::-1].T), ys], axis=1)
+        right = np.stack([np.interp(ys, *rp[np.argsort(rp[:, 1])][:, ::-1].T), ys], axis=1)
+        poly = np.vstack([left, right[::-1]]).astype(np.int32)
         layer = out.copy()
         color = (0, 0, 255) if result.departure else (0, 200, 0)
         cv2.fillPoly(layer, [poly], color)
