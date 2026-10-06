@@ -25,7 +25,7 @@ def add_measurements(result: LaneResult, cfg: ClassicalConfig) -> LaneResult:
         pts = cv2.perspectiveTransform(
             result.lanes[slot].astype(np.float32).reshape(-1, 1, 2), tf.M).reshape(-1, 2)
         pts = pts[(pts[:, 1] >= 0) & (pts[:, 1] < h)]
-        if len(pts) < 5:
+        if len(pts) < 5 or np.ptp(pts[:, 1]) < 0.2 * h:  # too short to fit a curve
             return result
         fits.append(np.polyfit(pts[:, 1], pts[:, 0], 2))
     result.curvature_m = float(np.mean(
