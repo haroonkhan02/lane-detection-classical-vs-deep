@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lane-detection-classical-vs-deep"
+version = "1.0.0"
+description = "Lane detection two ways: a classical OpenCV pipeline (bird's-eye warp, sliding windows, curvature) vs. a U-Net lane segmentation model, benchmarked on TuSimple."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Muhammad Haroon Khan" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy>=1.26",
+    "opencv-python>=4.9",
+    "pyyaml>=6",
+    "tqdm>=4.66",
+    "matplotlib>=3.8",
+    "huggingface_hub>=0.23",
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "segmentation-models-pytorch>=0.3.3",
+]
+
+[project.optional-dependencies]
+demo = ["gradio>=4"]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+lanes-download = "lanedet.download:main"
+lanes-calibrate = "lanedet.classical.calibration:main"
+lanes-train = "lanedet.deep.train:main"
+lanes-evaluate = "lanedet.evaluate:main"
+lanes-video = "lanedet.video:main"
+lanes-demo = "lanedet.demo:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
