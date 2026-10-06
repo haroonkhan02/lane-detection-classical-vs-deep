@@ -1,0 +1,5 @@
+# Udacity CarND project camera (1280x720). Trapezoid hand-picked on straight_lines1.jpg.
+src: [[0.457, 0.632], [0.551, 0.632], [0.883, 1.0], [0.148, 1.0]]
+dst: [[0.25, 0.0], [0.75, 0.0], [0.75, 1.0], [0.25, 1.0]]
+xm_per_pix: 0.00578   # 3.7 m lane width / 640 px in the warped view
+ym_per_pix: 0.04167   # ~30 m of road / 720 px
