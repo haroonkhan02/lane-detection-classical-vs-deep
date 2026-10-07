@@ -3,30 +3,34 @@
 Only the labelled frame of each TuSimple clip (``20.jpg``) is fetched. Note: the public
 Hugging Face mirror contains only ~500 of the ~6,400 labelled clips, so this gives a
 *subset* of TuSimple (frames that are missing from the mirror are skipped and counted).
-If you have the full dataset (e.g. from Kaggle), extract it to ``data/tusimple/`` with
-the standard layout (``clips/...``, ``label_data_*.json``, ``test_label.json``) and
-everything else works unchanged.
+The ``kaggle`` source fetches the *full* dataset (~23 GB zip with every video frame,
+needs ``~/.kaggle/kaggle.json``) and extracts only the labels and the labelled frames
+(~1.3 GB) into ``data/tusimple_full/``.
 
 Examples:
     lanes-download udacity
     lanes-download tusimple --split train
     lanes-download tusimple --split test --limit 300
+    lanes-download kaggle            # full TuSimple -> data/tusimple_full
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import threading
 import time
 import urllib.error
 import urllib.request
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from tqdm import tqdm
 
 from .config import (
+    DATA_DIR,
     TUSIMPLE_DIR,
     TUSIMPLE_REPO,
     TUSIMPLE_TEST_JSON,
@@ -131,6 +135,50 @@ def download_tusimple(split: str, root: Path = TUSIMPLE_DIR, limit: int | None =
     return done, total
 
 
+KAGGLE_DATASET = "manideep1108/tusimple"
+TUSIMPLE_FULL_DIR = DATA_DIR / "tusimple_full"
+
+
+def extract_tusimple_zip(zip_path: Path, root: Path = TUSIMPLE_FULL_DIR) -> int:
+    """Extract labels + labelled frames from the Kaggle archive into one flat root.
+
+    The archive keeps train and test under ``*/train_set/`` and ``*/test_set/``; their
+    clip folders don't collide, so both are merged under ``root/clips/`` to match the
+    ``raw_file`` paths in the label files. Returns the number of frames extracted.
+    """
+    frames = 0
+    with zipfile.ZipFile(zip_path) as zf:
+        for name in zf.namelist():
+            parts = name.split("/")
+            is_label = name.endswith(".json") and parts[-1].startswith(("label_data", "test_"))
+            is_frame = parts[-1] == "20.jpg" and "clips" in parts
+            if not (is_label or is_frame):
+                continue
+            rel = Path(parts[-1]) if is_label else Path(*parts[parts.index("clips"):])
+            dest = root / rel
+            if dest.exists():
+                frames += is_frame
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with zf.open(name) as src, dest.open("wb") as out:
+                out.write(src.read())
+            frames += is_frame
+    return frames
+
+
+def download_tusimple_kaggle(root: Path = TUSIMPLE_FULL_DIR, keep_zip: bool = False) -> int:
+    cache = DATA_DIR / "kaggle"
+    cache.mkdir(parents=True, exist_ok=True)
+    zip_path = cache / "tusimple.zip"
+    if not zip_path.exists():
+        subprocess.run(["kaggle", "datasets", "download", KAGGLE_DATASET, "-p", str(cache)],
+                       check=True)
+    frames = extract_tusimple_zip(zip_path, root)
+    if not keep_zip:
+        zip_path.unlink()
+    return frames
+
+
 def download_udacity(root: Path = UDACITY_DIR) -> int:
     for rel in tqdm(UDACITY_FILES, desc="udacity", unit="file"):
         _fetch(f"{UDACITY_RAW}/{rel}", root / rel)
@@ -140,12 +188,16 @@ def download_udacity(root: Path = UDACITY_DIR) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("dataset", choices=("tusimple", "udacity"))
+    parser.add_argument("dataset", choices=("tusimple", "udacity", "kaggle"))
+    parser.add_argument("--keep-zip", action="store_true", help="kaggle: keep the 23 GB zip")
     parser.add_argument("--split", choices=tuple(SPLIT_JSONS), default="train")
     parser.add_argument("--limit", type=int, help="only the first N frames")
     args = parser.parse_args()
     if args.dataset == "udacity":
         print(f"Done: {download_udacity()} files")
+    elif args.dataset == "kaggle":
+        frames = download_tusimple_kaggle(keep_zip=args.keep_zip)
+        print(f"Done: {frames} labelled frames in {TUSIMPLE_FULL_DIR}")
     else:
         done, total = download_tusimple(args.split, limit=args.limit)
         print(f"Done: {done} of {total} labelled {args.split} frames available in the mirror")

@@ -75,3 +75,23 @@ def test_lane_result_x_at():
     assert xs == [-2.0, 100.0, 150.0, 200.0, -2.0]
     assert r.x_at("right", [300]) == [-2.0]
     assert r.tusimple_lanes([300, 400], ["left", "right"]) == [[100.0, 150.0]]
+
+
+def test_extract_kaggle_zip(tmp_path):
+    import zipfile
+
+    from lanedet.download import extract_tusimple_zip
+
+    zp = tmp_path / "t.zip"
+    with zipfile.ZipFile(zp, "w") as zf:
+        zf.writestr("TUSimple/train_set/label_data_0313.json", "{}")
+        zf.writestr("TUSimple/test_label.json", "{}")
+        zf.writestr("TUSimple/train_set/clips/0313-1/6040/20.jpg", b"a")
+        zf.writestr("TUSimple/train_set/clips/0313-1/6040/19.jpg", b"skip")
+        zf.writestr("TUSimple/test_set/clips/0530/123_0/20.jpg", b"b")
+    root = tmp_path / "out"
+    assert extract_tusimple_zip(zp, root) == 2
+    assert (root / "label_data_0313.json").exists() and (root / "test_label.json").exists()
+    assert (root / "clips/0313-1/6040/20.jpg").exists()
+    assert (root / "clips/0530/123_0/20.jpg").exists()
+    assert not (root / "clips/0313-1/6040/19.jpg").exists()
