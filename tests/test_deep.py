@@ -70,3 +70,18 @@ def test_model_forward_and_checkpoint_roundtrip(tmp_path):
     det = DeepLaneDetector(ckpt, device="cpu")
     result = det(np.zeros((720, 1280, 3), np.uint8))
     assert result.size == (1280, 720)
+
+
+def test_seed_worker_gives_each_worker_its_own_rng(monkeypatch):
+    from types import SimpleNamespace
+
+    import lanedet.deep.dataset as dataset
+
+    draws = []
+    for worker_id in range(2):
+        ds = dataset.TuSimpleDataset([], ".", augment=True, seed=0)
+        info = SimpleNamespace(seed=1234 + worker_id, dataset=ds)
+        monkeypatch.setattr(dataset.torch.utils.data, "get_worker_info", lambda info=info: info)
+        dataset.seed_worker(worker_id)
+        draws.append(ds.rng.random(5).tolist())
+    assert draws[0] != draws[1]

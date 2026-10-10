@@ -29,7 +29,7 @@ from ..config import (
     TUSIMPLE_VAL_JSONS,
 )
 from ..tusimple import available_records
-from .dataset import TuSimpleDataset
+from .dataset import TuSimpleDataset, seed_worker
 from .model import DeepLaneDetector, build_model, pick_device
 
 
@@ -92,7 +92,7 @@ def main() -> None:
     loader = DataLoader(
         TuSimpleDataset(train_recs, args.root, size, augment=True, seed=args.seed),
         batch_size=args.batch_size, shuffle=True, num_workers=args.workers,
-        persistent_workers=args.workers > 0, drop_last=True)
+        persistent_workers=args.workers > 0, drop_last=True, worker_init_fn=seed_worker)
     model = build_model(args.encoder).to(device)
     criterion = make_loss(device)
     optim = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)

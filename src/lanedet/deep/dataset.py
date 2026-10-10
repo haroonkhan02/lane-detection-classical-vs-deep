@@ -23,6 +23,18 @@ def to_tensor(bgr: np.ndarray, size: tuple[int, int]) -> torch.Tensor:
     return torch.from_numpy(x.transpose(2, 0, 1).copy())
 
 
+def seed_worker(worker_id: int) -> None:
+    """DataLoader ``worker_init_fn``: give each worker its own augmentation RNG.
+
+    Workers receive a pickled copy of the dataset, so without this every worker would draw the
+    *same* sequence of augmentation parameters. torch assigns each worker a distinct seed derived
+    from the (seeded) main-process generator, so runs stay reproducible.
+    """
+    info = torch.utils.data.get_worker_info()
+    if info is not None and hasattr(info.dataset, "rng"):
+        info.dataset.rng = np.random.default_rng(info.seed % 2**32)
+
+
 class TuSimpleDataset(Dataset):
     """Lane-slot segmentation samples.
 
