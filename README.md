@@ -32,18 +32,20 @@ Full **TuSimple test set (2,782 images)**, official TuSimple metric. Time per fr
 
 | Method | Ego acc ↑ | Ego FP ↓ | Ego FN ↓ | All-lanes acc ↑ | All FP ↓ | All FN ↓ | ms / frame |
 |---|---|---|---|---|---|---|---|
-| Classical (tuned on 1,000 train images) | 0.773 | 0.330 | 0.395 | 0.541 | 0.329 | 0.634 | **9.5** |
-| U-Net ResNet-34 (30 epochs on 3,268 images, best on val) | **0.951** | **0.051** | **0.050** | **0.948** | **0.054** | **0.068** | 20.0 |
+| Classical (tuned on 1,000 train images) | 0.773 | 0.330 | 0.395 | 0.541 | 0.329 | 0.634 | **9.8** |
+| U-Net ResNet-34 (30 epochs on 3,268 images, best on val) | **0.951** | **0.053** | **0.051** | **0.950** | **0.049** | **0.062** | 20.7 |
 
-*Ego* = the two lanes bounding the car's lane (what lane keeping needs, and all the classical pipeline looks for); *all lanes* = standard TuSimple protocol (classical scores low there by design). Training took 99 minutes on the M5.
+*Ego* = the two lanes bounding the car's lane (what lane keeping needs, and all the classical pipeline looks for); *all lanes* = standard TuSimple protocol (classical scores low there by design). Training took 104 minutes on the M5 (best validation epoch 28 of 30).
 
 <p align="center"><img src="reports/gallery_test.jpg" width="720" alt="Test gallery: classical vs deep"></p>
 <p align="center"><sub>Hardest and median test cases. Classical (left) misses lanes whose markings are faint or occluded; the network (right) finds them and the outer lanes. Row 1 shows the network's failure mode: a lane hidden by a truck gets a hooked polynomial fit.</sub></p>
 
+> **Retrained 2026-10-10 after a bug fix.** The 4 data-loader workers had each received a copy of the same random generator, so they drew identical augmentation parameters. With per-worker seeding (`lanedet.deep.dataset.seed_worker`) the same 30-epoch run gives ego accuracy 0.951 (before: 0.951), all-lanes 0.950 (0.948), ego FP / FN 0.053 / 0.051 (0.051 / 0.050). The fix made training correct, not measurably better. The numbers above are from the fixed run; the earlier ones are in git history.
+
 **What the numbers say**
 
 - On its home domain the network is far better: false positives and false negatives drop from ~33–40 % to ~5 %. Faint dashes and Botts' dots defeat brightness/gradient thresholds; the U-Net has *learned* what a lane looks like, and it also finds the outer lanes the classical design never looks for.
-- **Data matters more than epochs.** The same model trained on the 233-image subset reached 0.914 ego accuracy after 60 epochs; with 14× more data it passes 0.93 on val after 10 epochs and reaches 0.951 on test.
+- **Data matters more than epochs.** The same model trained on the 233-image subset reached 0.914 ego accuracy after 60 epochs; with 14× more data it reaches 0.926 on val after 10 epochs (0.935 at best) and 0.951 on test.
 - The classical pipeline is twice as fast, needs **no training data**, and every failure is explainable from its debug views. Its score barely moved between the subset and the full test set (0.783 → 0.773): it has no data to benefit from.
 - **Known limitation: the departure warning on curves.** Offset is measured through a homography calibrated on straight road, so on tight bends both methods can raise false lane-departure warnings (red fill in the gallery). A calibrated camera height/pitch would fix this.
 - **Neither is robust off-domain.** On Udacity's challenge video (different camera, shadows, asphalt seams) the classical pipeline locks onto the dark seam beside the barrier, and the network, trained on a different camera, produces unstable curves and a false departure warning:
