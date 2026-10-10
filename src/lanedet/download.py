@@ -32,6 +32,7 @@ from tqdm import tqdm
 from .config import (
     DATA_DIR,
     TUSIMPLE_DIR,
+    TUSIMPLE_FULL_DIR,
     TUSIMPLE_REPO,
     TUSIMPLE_TEST_JSON,
     TUSIMPLE_TRAIN_JSONS,
@@ -136,7 +137,6 @@ def download_tusimple(split: str, root: Path = TUSIMPLE_DIR, limit: int | None =
 
 
 KAGGLE_DATASET = "manideep1108/tusimple"
-TUSIMPLE_FULL_DIR = DATA_DIR / "tusimple_full"
 
 
 def extract_tusimple_zip(zip_path: Path, root: Path = TUSIMPLE_FULL_DIR) -> int:

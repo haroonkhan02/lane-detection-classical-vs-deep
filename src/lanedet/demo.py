@@ -14,7 +14,7 @@ import numpy as np
 
 from .classical.config import ClassicalConfig
 from .classical.pipeline import ClassicalLaneDetector
-from .config import CONFIGS_DIR, MODELS_DIR, TUSIMPLE_DIR
+from .config import DEFAULT_CHECKPOINT, DEFAULT_CONFIG, TUSIMPLE_DIR
 from .viz import binary_to_bgr, draw_hud, draw_lanes
 
 
@@ -63,8 +63,8 @@ def build_app(config: Path, checkpoint: Path):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", type=Path, default=CONFIGS_DIR / "tusimple.yaml")
-    parser.add_argument("--checkpoint", type=Path, default=MODELS_DIR / "unet_resnet34.pt")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     parser.add_argument("--share", action="store_true", help="create a public Gradio link")
     args = parser.parse_args()
     build_app(args.config, args.checkpoint).launch(share=args.share)

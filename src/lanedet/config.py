@@ -12,6 +12,15 @@ MODELS_DIR = ROOT / "models"
 REPORTS_DIR = ROOT / "reports"
 CONFIGS_DIR = ROOT / "configs"
 OUTPUTS_DIR = ROOT / "outputs"
+TUSIMPLE_FULL_DIR = DATA_DIR / "tusimple_full"
+
+# The model trained on the full TuSimple set is the default once it exists; otherwise the CLIs
+# fall back to the subset model so a fresh clone still works after `lanes-download tusimple`.
+FULL_CHECKPOINT = MODELS_DIR / "unet_resnet34_full.pt"
+_HAS_FULL = FULL_CHECKPOINT.exists()
+DEFAULT_CONFIG = CONFIGS_DIR / ("tusimple_full.yaml" if _HAS_FULL else "tusimple.yaml")
+DEFAULT_CHECKPOINT = FULL_CHECKPOINT if _HAS_FULL else MODELS_DIR / "unet_resnet34.pt"
+DEFAULT_ROOT = TUSIMPLE_FULL_DIR if TUSIMPLE_FULL_DIR.exists() else DATA_DIR / "tusimple"
 
 # TuSimple benchmark
 TUSIMPLE_REPO = "dhbloo/TuSimple"  # Hugging Face mirror of github.com/TuSimple/tusimple-benchmark

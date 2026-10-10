@@ -18,7 +18,7 @@ import numpy as np
 from .classical.calibration import Calibration
 from .classical.config import ClassicalConfig
 from .classical.pipeline import ClassicalLaneDetector
-from .config import CONFIGS_DIR, MODELS_DIR
+from .config import DEFAULT_CHECKPOINT, DEFAULT_CONFIG
 from .viz import draw_hud, draw_lanes
 
 
@@ -48,9 +48,9 @@ def main() -> None:
     parser.add_argument("input", type=Path)
     parser.add_argument("-o", "--output", type=Path, required=True)
     parser.add_argument("--method", choices=("classical", "deep", "both"), default="classical")
-    parser.add_argument("--config", type=Path, default=CONFIGS_DIR / "tusimple.yaml")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--calibration", type=Path)
-    parser.add_argument("--checkpoint", type=Path, default=MODELS_DIR / "unet_resnet34.pt")
+    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     parser.add_argument("--max-frames", type=int)
     args = parser.parse_args()
 

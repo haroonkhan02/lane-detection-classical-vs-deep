@@ -23,12 +23,12 @@ from tqdm import tqdm
 from .classical.config import ClassicalConfig
 from .classical.pipeline import ClassicalLaneDetector
 from .config import (
-    CONFIGS_DIR,
+    DEFAULT_CHECKPOINT,
+    DEFAULT_CONFIG,
+    DEFAULT_ROOT,
     EGO_SLOTS,
-    MODELS_DIR,
     REPORTS_DIR,
     SLOTS,
-    TUSIMPLE_DIR,
     TUSIMPLE_TEST_JSON,
     TUSIMPLE_TRAIN_JSONS,
     TUSIMPLE_VAL_JSONS,
@@ -88,9 +88,9 @@ def main() -> None:
     parser.add_argument("--split", choices=tuple(SPLITS), default="test")
     parser.add_argument("--methods", nargs="+", choices=("classical", "deep"),
                         default=["classical", "deep"])
-    parser.add_argument("--config", type=Path, default=CONFIGS_DIR / "tusimple.yaml")
-    parser.add_argument("--checkpoint", type=Path, default=MODELS_DIR / "unet_resnet34.pt")
-    parser.add_argument("--root", type=Path, default=TUSIMPLE_DIR)
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
 
