@@ -15,16 +15,22 @@ import numpy as np
 from .classical.config import ClassicalConfig
 from .classical.pipeline import ClassicalLaneDetector
 from .config import DEFAULT_CHECKPOINT, DEFAULT_CONFIG, TUSIMPLE_DIR
+from .hub import resolve_checkpoint
 from .viz import binary_to_bgr, draw_hud, draw_lanes
 
 
-def build_app(config: Path, checkpoint: Path):
+def default_examples(limit: int = 4) -> list[str]:
+    return sorted(str(p) for p in (TUSIMPLE_DIR / "clips").rglob("20.jpg"))[:limit]
+
+
+def build_app(config: Path, checkpoint: Path | None, examples: list[str] | None = None,
+              description: str = ""):
     import gradio as gr
 
     cfg = ClassicalConfig.from_yaml(config)
     classical = ClassicalLaneDetector(cfg)
     deep = None
-    if checkpoint.exists():
+    if checkpoint is not None and checkpoint.exists():
         from .deep.model import DeepLaneDetector
 
         deep = DeepLaneDetector(checkpoint, classical_cfg=cfg)
@@ -45,10 +51,10 @@ def build_app(config: Path, checkpoint: Path):
         to_rgb = lambda im: cv2.cvtColor(im, cv2.COLOR_BGR2RGB)  # noqa: E731
         return to_rgb(out_c), to_rgb(out_d), to_rgb(bird)
 
-    examples = sorted(str(p) for p in (TUSIMPLE_DIR / "clips").rglob("20.jpg"))[:4]
+    examples = default_examples() if examples is None else examples
     with gr.Blocks(title="Lane detection: classical vs deep") as app:
         gr.Markdown("## Lane detection: classical CV vs. U-Net\nUpload a front-camera road "
-                    "image (TuSimple-like viewpoint works best).")
+                    "image (TuSimple-like viewpoint works best)." + description)
         inp = gr.Image(label="Input", type="numpy")
         with gr.Row():
             out_c = gr.Image(label="Classical pipeline")
@@ -65,9 +71,12 @@ def main() -> None:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--no-hub", action="store_true",
+                        help="don't download the published weights when no local checkpoint")
     parser.add_argument("--share", action="store_true", help="create a public Gradio link")
     args = parser.parse_args()
-    build_app(args.config, args.checkpoint).launch(share=args.share)
+    checkpoint = resolve_checkpoint(args.checkpoint, use_hub=not args.no_hub)
+    build_app(args.config, checkpoint).launch(share=args.share)
 
 
 if __name__ == "__main__":

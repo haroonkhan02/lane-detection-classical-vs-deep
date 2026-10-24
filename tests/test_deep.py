@@ -85,3 +85,40 @@ def test_seed_worker_gives_each_worker_its_own_rng(monkeypatch):
         dataset.seed_worker(worker_id)
         draws.append(ds.rng.random(5).tolist())
     assert draws[0] != draws[1]
+
+
+def test_resolve_checkpoint_prefers_local_file(tmp_path, monkeypatch):
+    import huggingface_hub
+
+    from lanedet.hub import resolve_checkpoint
+
+    def no_download(**_):
+        raise AssertionError("should not hit the Hub")
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", no_download)
+    local = tmp_path / "model.pt"
+    local.write_bytes(b"x")
+    assert resolve_checkpoint(local) == local
+    assert resolve_checkpoint(tmp_path / "missing.pt", use_hub=False) is None
+
+
+def test_resolve_checkpoint_downloads_or_degrades(tmp_path, monkeypatch):
+    import huggingface_hub
+
+    from lanedet.hub import HUB_FILENAME, HUB_REPO, resolve_checkpoint
+
+    calls = []
+
+    def fake_download(repo_id, filename):
+        calls.append((repo_id, filename))
+        return str(tmp_path / filename)
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake_download)
+    assert resolve_checkpoint(tmp_path / "missing.pt") == tmp_path / HUB_FILENAME
+    assert calls == [(HUB_REPO, HUB_FILENAME)]
+
+    def offline(**_):
+        raise OSError("no network")
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", offline)
+    assert resolve_checkpoint(None) is None
