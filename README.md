@@ -89,9 +89,11 @@ lanes-evaluate             # both methods on test, writes reports/
 lanes-demo                 # Gradio app
 ```
 
+To try the demo without training, run `lanes-demo` straight after install: it downloads the published weights from [Hugging Face](https://huggingface.co/haroonx02/lane-detection-unet-resnet34). `space/` and `scripts/deploy_space.py` package the same demo as a Hugging Face Space.
+
 `lanes-video data/udacity/project_video.mp4 --method classical --config configs/udacity.yaml --calibration models/udacity_calibration.npz -o outputs/project_classical.mp4` annotates a video. Training takes about 100 minutes on an M5. The original TuSimple links are dead; without a Kaggle account, `lanes-download tusimple --split train|val|test` fetches the ~500-clip public mirror instead.
 
-Tests run on synthetic roads with no dataset or GPU: `pytest` (34 tests) and `ruff check .`.
+Tests run on synthetic roads with no dataset or GPU: `pytest` (36 tests) and `ruff check .`.
 
 ## Repository structure
 
@@ -115,10 +117,12 @@ lane-detection-classical-vs-deep/
 │   ├── measure.py           # curvature and offset for any detector
 │   ├── video.py             # annotate videos
 │   ├── demo.py              # Gradio demo
+│   ├── hub.py               # published weights on the Hugging Face Hub
 │   ├── viz.py               # overlays, HUD, mosaics
 │   ├── download.py          # TuSimple and Udacity data
 │   └── types.py             # LaneResult shared by both detectors
 ├── configs/                 # classical parameters per camera
+├── space/                   # Hugging Face Space app (deploy with scripts/deploy_space.py)
 ├── tests/                   # synthetic roads, no data needed
 ├── reports/                 # results, training history, galleries
 ├── assets/                  # README media

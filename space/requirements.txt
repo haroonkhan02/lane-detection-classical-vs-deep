@@ -1,0 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+lane-detection-classical-vs-deep @ git+https://github.com/haroonkhan02/lane-detection-classical-vs-deep@16ad135d426e113d23fa993be768b9cacdf4b2c7
