@@ -25,6 +25,7 @@ dependencies = [
 [project.optional-dependencies]
 demo = ["gradio>=4"]
 kaggle = ["kaggle>=1.6"]
+export = ["onnx>=1.16", "onnxruntime>=1.18", "onnxconverter-common>=1.14", "coremltools>=8; sys_platform == 'darwin'"]
 dev = ["pytest>=8", "ruff>=0.6"]
 
 [project.scripts]
@@ -34,6 +35,7 @@ lanes-train = "lanedet.deep.train:main"
 lanes-evaluate = "lanedet.evaluate:main"
 lanes-video = "lanedet.video:main"
 lanes-demo = "lanedet.demo:main"
+lanes-export = "lanedet.export_models:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

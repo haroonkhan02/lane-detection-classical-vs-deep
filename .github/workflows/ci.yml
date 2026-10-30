@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install numpy opencv-python-headless pyyaml tqdm matplotlib huggingface_hub \
-            segmentation-models-pytorch pytest ruff
+            segmentation-models-pytorch onnx onnxruntime onnxconverter-common pytest ruff
           pip install -e . --no-deps  # avoid the GUI opencv build on the runner
       - name: Lint
         run: ruff check .

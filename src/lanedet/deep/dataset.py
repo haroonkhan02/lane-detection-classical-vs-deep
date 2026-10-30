@@ -16,10 +16,15 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 
+def to_rgb01(bgr: np.ndarray, size: tuple[int, int]) -> np.ndarray:
+    """BGR uint8 image -> RGB float32 HWC in [0, 1] at ``size`` (w, h)."""
+    rgb = cv2.cvtColor(cv2.resize(bgr, size, interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB)
+    return rgb.astype(np.float32) / 255.0
+
+
 def to_tensor(bgr: np.ndarray, size: tuple[int, int]) -> torch.Tensor:
     """BGR uint8 image -> normalized CHW float tensor at ``size`` (w, h)."""
-    rgb = cv2.cvtColor(cv2.resize(bgr, size, interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB)
-    x = (rgb.astype(np.float32) / 255.0 - IMAGENET_MEAN) / IMAGENET_STD
+    x = (to_rgb01(bgr, size) - IMAGENET_MEAN) / IMAGENET_STD
     return torch.from_numpy(x.transpose(2, 0, 1).copy())
 
 
