@@ -36,6 +36,7 @@ lanes-evaluate = "lanedet.evaluate:main"
 lanes-video = "lanedet.video:main"
 lanes-demo = "lanedet.demo:main"
 lanes-export = "lanedet.export_models:main"
+lanes-benchmark = "lanedet.benchmark:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
