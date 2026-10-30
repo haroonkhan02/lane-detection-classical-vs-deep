@@ -13,6 +13,7 @@ models:
 custom_headers:
   cross-origin-embedder-policy: credentialless
   cross-origin-opener-policy: same-origin
+  cross-origin-resource-policy: cross-origin
 ---
 
 A U-Net lane-slot segmentation model (ResNet-34 encoder, trained on TuSimple) exported to
