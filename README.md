@@ -8,6 +8,7 @@ The same problem solved twice, a hand-engineered OpenCV pipeline and a U-Net lan
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-U--Net-ee4c2c)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+[![Live demo](https://img.shields.io/badge/demo-in--browser%20on%20Hugging%20Face-yellow)](https://huggingface.co/spaces/haroonx02/lane-detection-browser)
 
 <img src="assets/classical_project_video.gif" width="640" alt="Classical pipeline on the Udacity project video">
 
@@ -21,6 +22,7 @@ The same problem solved twice, a hand-engineered OpenCV pipeline and a U-Net lan
 - Deep pipeline: a U-Net with a pretrained ResNet-34 encoder that labels each pixel with its lane slot (ego-left, ego-right or one of the outer lanes).
 - Both return lanes in the same format, so they share the metric, curvature/offset measurement, lane-departure warning, video tool and a Gradio demo that shows them side by side.
 - Fair comparison: classical parameters are tuned on train, the network checkpoint is picked on val, and both are scored once on the full TuSimple test set.
+- The network is exported to ONNX (FP32, FP16, INT8) and CoreML, and the INT8 model runs entirely in the browser in a [static Hugging Face Space](https://huggingface.co/spaces/haroonx02/lane-detection-browser).
 
 ## Results
 
@@ -43,6 +45,21 @@ Neither method holds up off-domain. On Udacity's challenge video (different came
 <p align="center"><img src="assets/challenge_domain_shift.jpg" width="640" alt="Domain shift on the Udacity challenge video"></p>
 
 Per-epoch training history and raw metrics are in [`reports/`](reports).
+
+## Export and in-browser demo
+
+The exported graph includes the ImageNet normalisation and the softmax, so a client only resizes the image and divides by 255. Every variant was re-scored on the full test set and timed on the M5 (network only, median of 100 runs):
+
+| Variant | Size | Ego acc | Ego FP | Latency |
+|---|---|---|---|---|
+| PyTorch FP32 | 98 MB | 0.951 | 0.053 | 14.9 ms MPS · 71.5 ms CPU |
+| ONNX FP32 / FP16 | 98 / 49 MB | 0.951 | 0.053 | 39.0 / 37.2 ms (onnxruntime CPU) |
+| ONNX INT8 (static, QDQ) | 25 MB | 0.950 | 0.056 | 34.7 ms (onnxruntime CPU) |
+| CoreML FP32 / FP16 | 98 / 49 MB | 0.951 | 0.053 | 9.6 / 3.7 ms (GPU / Neural Engine) |
+
+FP32 and FP16 exports change nothing measurable. INT8 costs 0.001 ego accuracy at a quarter of the size; on 2 of 100 parity images it finds a different set of lanes. CoreML FP16 on the Neural Engine is four times faster than PyTorch on the GPU, but because it computes everything in half precision the lane points move by a median 8 px, still inside TuSimple's 20 px tolerance.
+
+The browser demo runs the INT8 model with onnxruntime-web (WebAssembly, 4 threads) at about 210 ms per frame in Chrome on the M5. The resize, lane extraction and polynomial fit are ported to JavaScript; on 200 test frames the JavaScript pipeline found the same lanes as Python, with a median shift under 0.01 px and the same ego-lane accuracy. Details: [`reports/export.md`](reports/export.md), [`reports/benchmark.md`](reports/benchmark.md), [`reports/web_parity.json`](reports/web_parity.json).
 
 ## How it works
 
@@ -89,11 +106,13 @@ lanes-evaluate             # both methods on test, writes reports/
 lanes-demo                 # Gradio app
 ```
 
-To try the demo without training, run `lanes-demo` straight after install: it downloads the published weights from [Hugging Face](https://huggingface.co/haroonx02/lane-detection-unet-resnet34). `space/` and `scripts/deploy_space.py` package the same demo as a Hugging Face Space.
+To try the demo without training, run `lanes-demo` straight after install: it downloads the published weights from [Hugging Face](https://huggingface.co/haroonx02/lane-detection-unet-resnet34). `space/` packages the same Gradio demo as a Space.
+
+For the exports, `uv pip install -e ".[export]"`, then `lanes-export` (all variants, re-scored on test) and `lanes-benchmark`; `scripts/web_parity.py` checks the JavaScript port and `scripts/deploy_static_space.py --models` publishes `web/`.
 
 `lanes-video data/udacity/project_video.mp4 --method classical --config configs/udacity.yaml --calibration models/udacity_calibration.npz -o outputs/project_classical.mp4` annotates a video. Training takes about 100 minutes on an M5. The original TuSimple links are dead; without a Kaggle account, `lanes-download tusimple --split train|val|test` fetches the ~500-clip public mirror instead.
 
-Tests run on synthetic roads with no dataset or GPU: `pytest` (36 tests) and `ruff check .`.
+Tests run on synthetic roads with no dataset or GPU: `pytest` (41 tests) and `ruff check .`.
 
 ## Repository structure
 
@@ -110,10 +129,13 @@ lane-detection-classical-vs-deep/
 │   ├── deep/
 │   │   ├── dataset.py       # TuSimple to lane-slot masks, augmentation
 │   │   ├── model.py         # U-Net, lane extraction, DeepLaneDetector
+│   │   ├── export.py        # ONNX / FP16 / INT8 / CoreML export and runners
 │   │   └── train.py         # training loop (MPS / CUDA / CPU)
 │   ├── tusimple.py          # annotation parsing, slot assignment
 │   ├── metrics.py           # TuSimple accuracy / FP / FN
 │   ├── evaluate.py          # benchmark both methods, report and gallery
+│   ├── export_models.py     # lanes-export: parity and test-set re-scoring
+│   ├── benchmark.py         # lanes-benchmark: latency per backend
 │   ├── measure.py           # curvature and offset for any detector
 │   ├── video.py             # annotate videos
 │   ├── demo.py              # Gradio demo
@@ -122,7 +144,9 @@ lane-detection-classical-vs-deep/
 │   ├── download.py          # TuSimple and Udacity data
 │   └── types.py             # LaneResult shared by both detectors
 ├── configs/                 # classical parameters per camera
-├── space/                   # Hugging Face Space app (deploy with scripts/deploy_space.py)
+├── web/                     # static in-browser demo (onnxruntime-web, lanes.js)
+├── space/                   # Gradio Space app (needs a paid CPU Space)
+├── scripts/                 # Space deploy scripts, JS vs Python parity check
 ├── tests/                   # synthetic roads, no data needed
 ├── reports/                 # results, training history, galleries
 ├── assets/                  # README media
@@ -139,12 +163,15 @@ lane-detection-classical-vs-deep/
 | Bird's-eye trapezoid fitted to median training lanes | TuSimple's camera has no published intrinsics, so the warp is calibrated from data. |
 | Checkpoint chosen on val TuSimple accuracy, not loss | Select on the metric you report. |
 | Augmentation RNG seeded per DataLoader worker | Otherwise all workers draw identical augmentations. |
+| Static INT8 with the softmax kept in float | Calibrated on 128 training frames; quantised probabilities would put the 0.4 lane threshold on a coarse grid. |
+| Browser decodes images without colour management | OpenCV ignores embedded ICC profiles; Chrome's default decode changed the Udacity frame's lanes. |
 
 ## Limitations and future work
 
 - The departure warning uses a homography calibrated on straight road, so both methods can raise false warnings on tight bends. A calibrated camera height and pitch would fix this.
 - Daytime highway data only. Training on CULane with night and rain scenes is the obvious next step, and where the classical pipeline should break down.
 - No temporal smoothing of the network output in video; row-anchor classification (UFLD-style) would also be much faster.
+- The browser demo uses WebAssembly only. WebGPU with the FP16 model should be several times faster where it is available.
 
 ## Acknowledgements
 
