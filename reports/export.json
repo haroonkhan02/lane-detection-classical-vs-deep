@@ -1,0 +1,155 @@
+{
+  "checkpoint": "/Users/haroon/Downloads/Robotics/ai-portfolio/lane-detection-classical-vs-deep/models/unet_resnet34_full.pt",
+  "test_images": 2782,
+  "parity_images": 100,
+  "variants": {
+    "pytorch_fp32": {
+      "size_mb": 97.912391,
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9507131303276163,
+          "fp_rate": 0.05265995686556434,
+          "fn_rate": 0.0514018691588785,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9498647769675808,
+          "fp_rate": 0.04945482866043614,
+          "fn_rate": 0.06182602444284687,
+          "images": 2782
+        },
+        "ms_per_frame": 82.0385761260873
+      }
+    },
+    "onnx_fp32": {
+      "file": "lane_unet_fp32.onnx",
+      "size_mb": 97.743935,
+      "parity": {
+        "images": 100,
+        "max_prob_diff": 1.5437602996826172e-05,
+        "same_lane_slots": 100,
+        "lane_shift_px_median": 2.1367922101944714e-05,
+        "lane_shift_px_max": 0.2382907245428676
+      },
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9507131303276163,
+          "fp_rate": 0.05265995686556434,
+          "fn_rate": 0.0514018691588785,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9498647769675808,
+          "fp_rate": 0.04945482866043614,
+          "fn_rate": 0.06182602444284687,
+          "images": 2782
+        },
+        "ms_per_frame": 49.68512820490724
+      }
+    },
+    "onnx_fp16": {
+      "file": "lane_unet_fp16.onnx",
+      "size_mb": 48.903009,
+      "parity": {
+        "images": 100,
+        "max_prob_diff": 0.009406983852386475,
+        "same_lane_slots": 100,
+        "lane_shift_px_median": 0.012082314527958715,
+        "lane_shift_px_max": 1.8317852379544775
+      },
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9507163397350314,
+          "fp_rate": 0.05265995686556434,
+          "fn_rate": 0.0514018691588785,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9498551487453357,
+          "fp_rate": 0.04945482866043614,
+          "fn_rate": 0.06182602444284687,
+          "images": 2782
+        },
+        "ms_per_frame": 47.202850089189056
+      }
+    },
+    "onnx_int8": {
+      "file": "lane_unet_int8.onnx",
+      "size_mb": 24.702216,
+      "parity": {
+        "images": 100,
+        "max_prob_diff": 0.7342996001243591,
+        "same_lane_slots": 98,
+        "lane_shift_px_median": 2.83534482317458,
+        "lane_shift_px_max": 298.2674368503955
+      },
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9498241244736572,
+          "fp_rate": 0.055535585909417685,
+          "fn_rate": 0.054277498202731846,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9492779903118688,
+          "fp_rate": 0.052300503235082674,
+          "fn_rate": 0.06428229091780494,
+          "images": 2782
+        },
+        "ms_per_frame": 40.240067302659334
+      }
+    },
+    "coreml_fp16": {
+      "file": "lane_unet_fp16.mlpackage",
+      "size_mb": 48.936764,
+      "parity": {
+        "images": 100,
+        "max_prob_diff": 0.024879246950149536,
+        "same_lane_slots": 100,
+        "lane_shift_px_median": 8.242894020810809,
+        "lane_shift_px_max": 17.341946293861383
+      },
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9506168481051659,
+          "fp_rate": 0.05301941049604601,
+          "fn_rate": 0.05176132278936017,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9498337526959022,
+          "fp_rate": 0.04969446441409058,
+          "fn_rate": 0.06206566019650132,
+          "images": 2782
+        },
+        "ms_per_frame": 7.151176263841552
+      }
+    },
+    "coreml_fp32": {
+      "file": "lane_unet_fp32.mlpackage",
+      "size_mb": 97.785479,
+      "parity": {
+        "images": 100,
+        "max_prob_diff": 1.7315149307250977e-05,
+        "same_lane_slots": 100,
+        "lane_shift_px_median": 2.4648163275742263e-05,
+        "lane_shift_px_max": 0.23828922336866754
+      },
+      "metrics": {
+        "ego": {
+          "accuracy": 0.9507131303276163,
+          "fp_rate": 0.05265995686556434,
+          "fn_rate": 0.0514018691588785,
+          "images": 2782
+        },
+        "all": {
+          "accuracy": 0.9498647769675808,
+          "fp_rate": 0.04945482866043614,
+          "fn_rate": 0.06182602444284687,
+          "images": 2782
+        },
+        "ms_per_frame": 13.6073822191938
+      }
+    }
+  }
+}

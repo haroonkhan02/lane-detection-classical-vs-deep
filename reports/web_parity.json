@@ -1,0 +1,37 @@
+{
+  "model": "lane_unet_int8.onnx",
+  "images": 200,
+  "onnxruntime_web": "1.30.0",
+  "js_ms_per_frame_node_wasm": 229.16468104000003,
+  "same_lane_slots": 200,
+  "lane_shift_px_median": 0.0003933614269726604,
+  "lane_shift_px_max": 2.4440746816256933,
+  "python": {
+    "ego": {
+      "accuracy": 0.9431696428571428,
+      "fp_rate": 0.0625,
+      "fn_rate": 0.0575,
+      "images": 200
+    },
+    "all": {
+      "accuracy": 0.945044642857143,
+      "fp_rate": 0.0525,
+      "fn_rate": 0.07041666666666666,
+      "images": 200
+    }
+  },
+  "javascript": {
+    "ego": {
+      "accuracy": 0.9431696428571428,
+      "fp_rate": 0.0625,
+      "fn_rate": 0.0575,
+      "images": 200
+    },
+    "all": {
+      "accuracy": 0.9450520833333332,
+      "fp_rate": 0.0525,
+      "fn_rate": 0.07041666666666666,
+      "images": 200
+    }
+  }
+}
