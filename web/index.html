@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lane Detection in the Browser</title>
+  <style>
+    :root {
+      --bg: #f6f6f4; --fg: #1d1d1b; --muted: #66665f; --card: #ffffff; --line: #deded8;
+      --accent: #2f6fdb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #161615; --fg: #ececea; --muted: #a2a29b; --card: #20201f; --line: #353533;
+              --accent: #7aa7f2; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg);
+           font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--accent); }
+    .muted { color: var(--muted); }
+    .examples { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 8px; }
+    .examples button { padding: 0; border: 2px solid transparent; border-radius: 6px;
+                       background: none; cursor: pointer; }
+    .examples button[aria-pressed="true"] { border-color: var(--accent); }
+    .examples img { display: block; width: 128px; height: 72px; object-fit: cover;
+                    border-radius: 4px; }
+    .upload { display: inline-block; margin: 4px 0 16px; padding: 6px 12px; cursor: pointer;
+              border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+    .upload input { display: none; }
+    canvas { width: 100%; height: auto; display: block; border-radius: 8px;
+             background: var(--card); border: 1px solid var(--line); }
+    #status { margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+                   vertical-align: -1px; margin: 0 4px 0 12px; }
+    footer { margin-top: 24px; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Lane detection in your browser</h1>
+  <p class="muted">A U-Net (ResNet-34) trained on TuSimple, quantised to INT8 and run with
+    onnxruntime-web. The model downloads once (25 MB) and every image is processed on your
+    device; nothing is uploaded.</p>
+
+  <div class="examples" id="examples"></div>
+  <label class="upload">Upload a road image<input type="file" id="file" accept="image/*"></label>
+
+  <canvas id="view" width="1280" height="720"></canvas>
+  <p id="status" class="muted">Loading the runtime…</p>
+  <p class="muted legend"><span style="background:#ffdc00"></span>ego lane boundaries
+    <span style="background:#00a0ff"></span>outer lanes
+    <span style="background:#00c800;opacity:.5"></span>ego lane</p>
+
+  <footer class="muted">
+    Trained on daytime US highway frames from a front camera, so other cameras, night or city
+    streets can fail. INT8 model on the TuSimple test set: see the
+    <a href="https://github.com/haroonkhan02/lane-detection-classical-vs-deep">GitHub repo</a>
+    for numbers, training code and the classical OpenCV pipeline it is compared with.
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
